@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack",
-    "dev-server": "webpack-dev-server",
+    "dev-server": "webpack-dev-server | PORT=3001 node react-backend/bin/www",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "proxy": "http://localhost:3001",
   "repository": {
     "type": "git",
     "url": "git@github.com:ibm-watson-iot/blockchain-samples.git"
@@ -50,6 +51,6 @@
     "redux-localstorage": "^0.4.0",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.0.1",
-    "underscore": "^1.8.3"
+    "underscore": "^1.9.0"
   }
 }
