@@ -56,8 +56,6 @@ class ObcConfigurationForm extends React.Component {
       //set an error message if the length is incorrect
       this.props.dispatch(actions.setValidity('obcConfiguration.chaincodeId', false));
     }
-
-
   }
   render() {
     let { obcConfiguration, obcConfigurationForm } = this.props;
@@ -93,6 +91,30 @@ class ObcConfigurationForm extends React.Component {
           <TextField
             hintText={strings.OBC_CONFIG_BPP_HT}
             floatingLabelText = {strings.OBC_CONFIG_BPP_FL}
+            fullWidth={true}
+            />
+        </MaterialField>
+        <br/>
+        <MaterialField model="obcConfiguration.key">
+          <TextField
+            hintText={strings.OBC_CONFIG_BPP_HT}
+            floatingLabelText = "Key"
+            fullWidth={true}
+            />
+        </MaterialField>
+        <br/>
+        <MaterialField model="obcConfiguration.secret">
+          <TextField
+            hintText={strings.OBC_CONFIG_BPP_HT}
+            floatingLabelText = "Secret"
+            fullWidth={true}
+            />
+        </MaterialField>
+        <br/>
+        <MaterialField model="obcConfiguration.networkId">
+          <TextField
+            hintText="Network Id"
+            floatingLabelText = "Network Id"
             fullWidth={true}
             />
         </MaterialField>

@@ -29,8 +29,12 @@ import Tab from 'material-ui/lib/tabs/tab';
 import Slider from 'material-ui/lib/slider';
 
 import ChaincodeOpsForm from './forms/ChaincodeOpsForm'
+import { fetchChaincodeData } from '../actions/ChaincodeActions'
+
 
 import {setCurrentTab} from '../actions/ChaincodeActions'
+
+import {fetchCcSchema} from '../actions/ChaincodeActions'
 
 import JsonSchemaForm from './forms/JsonSchemaForm'
 
@@ -51,15 +55,28 @@ display on the UI.
 **/
 class ChaincodeOps extends React.Component{
 
+  constructor(props){
+    super(props);
+  }
+
+  componentDidMount(){
+    //fetchChaincodeData()
+    fetchCcSchema()
+    //setCurrentTab(null)
+  }
+
   handleChange = (value) => {
     if(typeof(value) === "string"){
       this.props.dispatch(setCurrentTab(value))
+      //this.props.dispatch(requestChainCodeInfo())
     }
   }
 
   render(){
     //let {currentTab, possibleTabs} = this.props
     //TODO: Only rerender when going to the particular tab
+    console.log("props")
+    console.log(this.props)
 
     return(
       <Paper style={{marginBottom:20}}>
@@ -70,6 +87,7 @@ class ChaincodeOps extends React.Component{
                 <Tab label={tab.name} value={tab.name} key={tab.name}>
                   {/*Need to indicate which tab the form belongs to, so we can reference the state.*/}
                   <ChaincodeOpsForm tab={tab.name}/>
+
                   <div style={{margin: 10}}>
                   <JsonSchemaForm tabRenderedTo={tab.name}/>
                   </div>
@@ -77,6 +95,8 @@ class ChaincodeOps extends React.Component{
               )
             })}
           </Tabs>
+
+
       </Paper>
     )
   }

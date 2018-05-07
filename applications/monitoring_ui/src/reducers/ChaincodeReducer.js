@@ -39,7 +39,9 @@ import {
     UPDATE_RESPONSE_PAYLOAD,
     DISABLE_PAYLOAD_POLLING,
     OPEN_SNACKBAR,
-    HIDE_SNACKBAR
+    HIDE_SNACKBAR,
+    REQUEST_CHAINCODE_INFO,
+    RECEIVE_CHAINCODE_INFO
 } from '../actions/ChaincodeActions'
 
 
@@ -51,10 +53,10 @@ export const chaincode = (state = {
             { name: TAB_UPDATE, type: INVOKE },
             { name: TAB_READ, type: QUERY },
             { name: TAB_CREATE, type: INVOKE },
-            { name: TAB_REPLACE, type: INVOKE },
+            // { name: TAB_REPLACE, type: INVOKE },
             { name: TAB_DELETE, type: INVOKE },
-            { name: TAB_EVENT, type: INVOKE },
-            { name: TAB_SET, type: INVOKE }
+            // { name: TAB_EVENT, type: INVOKE },
+            // { name: TAB_SET, type: INVOKE }
         ],
         /*this is the list of payloads that we need to display on the ui
           {
@@ -94,6 +96,10 @@ export const chaincode = (state = {
                     ...state.ui,
                     ops: action.ops
                 }
+            })
+        case RECEIVE_CHAINCODE_INFO:
+            return Object.assign({}, state, {
+                chaincode: action.chaincode
             })
         case ENABLE_REMOVE_BTN:
             return update(state, {

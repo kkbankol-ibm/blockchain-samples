@@ -65,8 +65,6 @@ export const setConfigDialogDisplay = (showDialog) =>{
 export function setConfiguration(obcConfigObj){
 
   return function(dispatch, getState){
-    //let state = getState();
-
     //update any OBC related configuration
     dispatch(setObcConfiguration(obcConfigObj))
 

@@ -28,9 +28,9 @@ import {
 } from 'react-redux-form';
 
 const initialConfigurationState = {
-  urlRestRoot: "http://localhost:3000",
-  chaincodeId: "ff89038cb1db8fcddff9f3c786bba06dc1af9afb2616d8bcb851ac50db383be02e25391d979c5eaa499abf2845df270089eb9ac982cf3dec880d24ff70cf95d9",
-  secureContext: "user_context",
+  urlRestRoot: "https://ibmblockchain-starter.ng.bluemix.net/api/v1",
+  chaincodeId: "simple_contract",
+  secureContext: "<username>@<email_domain>",
   blocksPerPage: "10"
 };
 

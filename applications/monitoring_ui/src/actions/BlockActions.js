@@ -65,22 +65,25 @@ export function recChainHeight(chainHeight, blocksPerPage){
 This is a redux-thunk. We basically invoke all other events that are dependent
 on a block being added to the blockchain.
 **/
+
 export function fetchChainHeight(urlRestRoot){
 
   return function (dispatch, getState){
+    let state = getState();
+    var key = state.configuration.key
+    var secret = state.configuration.secret
+    var networkId = state.configuration.networkId
+    var headers = { "Authorization": "Basic " + new Buffer(key + ":" + secret, "utf8").toString("base64") }
 
-    return fetch(urlRestRoot + '/chain')
+    return fetch(urlRestRoot + '/networks/' + networkId + '/channels/defaultchannel', {method: 'post', headers: headers } )
     .then(response => response.json())
     .then((json) =>{
-
       //check if the chain height is any different
-      let state = getState();
-
+      var state = getState();
       //call any other functions that need to be invoked on change in blockchain height
-      if(state.blockchain.length === 0 || ((state.blockchain[0].blockNumber+1) !== json.height)){
-
+      if(state.blockchain.length === 0 || ((state.blockchain[0].blockNumber+1) !== json.height.low)){
         //when we receive the chain height, we must also use the blocks per page configuration to generate the blockchain correctly
-        dispatch(recChainHeight(json.height, state.configuration.blocksPerPage))
+        dispatch(recChainHeight(json.height.low, state.configuration.blocksPerPage))
         dispatch(sendObcPollingRequests())
       }
     }).catch(function(err){
@@ -106,18 +109,26 @@ export function fetchBlockData(blockNum){
 
     const state = getState();
 
+    var key = state.configuration.key
+    var secret = state.configuration.secret
+    var networkId = state.configuration.networkId
+    var headers = { "Authorization": "Basic " + new Buffer(key + ":" + secret, "utf8").toString("base64") }
+
     let blockData = (state.blockchain[state.blockchain[0].blockNumber - blockNum]).blockData
 
     //first make sure that there is no data for this object yet. If there is, we just resolve a promise, because data can't change.
     //The index manipulation is because the blocks are displayed in reverse on the UI, but the blocknums are increasing sequentially.
+    console.log("fetching block data")
     if(blockData){
+      console.log("block data already exists")
       return Promise.resolve();
     }
-
     //then return promise. Not necessary but a convienience in case we want to use then against the return.
-    return fetch(state.configuration.urlRestRoot + '/chain/blocks/' + blockNum)
+    return fetch(state.configuration.urlRestRoot + '/networks/' + state.configuration.networkId + '/channels/defaultchannel/blocks/' + blockNum, {method: 'post', headers: headers })
     .then(response => response.json())
     .then(json => {
+      console.log("block json")
+      console.log(json)
       dispatch(receiveBlockInfo(blockNum, json))
     })
   }

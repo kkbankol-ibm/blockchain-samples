@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and limitations 
 
 Contributors:
 
-Alex Nguyen - Initial Contribution 
+Alex Nguyen - Initial Contribution
 *****************************************************************************/
 import { connect } from 'react-redux'
 import { fetchBlockData } from '../actions/BlockActions'
@@ -44,33 +44,41 @@ class Block extends React.Component{
     return JSON.stringify(obj) === JSON.stringify({});
   };
 
-  
+
   render(){
     // combine transactions and chaincodeEvents, either can be missing or incomplete!
     let blockMap = {}
+
     const bd = this.props.blockData
     if (bd) {
-      if (bd.transactions) {
-        for (let i=0; i<bd.transactions.length; i++) {
-          let t = bd.transactions[i]
-          let p = window.atob(t.payload)
+      if (bd.parsed.txs) {
+        for (let i=0; i<bd.parsed.txs.length; i++) {
+          let t = bd.parsed.txs[i]
+          // let p = window.atob(t.payload)
+          //let p = window.atob(t.params.join("").replace('_',''))
+          let p = t.params.join(" ")
+          console.log("printing p")
+          console.log(p)
           let f = getFuncName(p)
           if (f === null) {
             f = "n/a"
           }
+          console.log("printing f")
+          console.log(f)
           let a = "n/a"
           let left = p.indexOf('{')
           let right = p.lastIndexOf('}')
           if (left >=0 && right > left) {
             a = p.substr(left, right - left + 1)
           }
-
-          blockMap[t.txid] = {
+          blockMap[t.tx_id] = {
             timestamp: t.timestamp,
             function: f,
-            args: a,
-            chaincodeID: window.atob(t.chaincodeID)
+            args: t.params.join(", "),
+            chaincodeID: t.chaincode_id
           }
+          console.log("printing blockMap")
+          console.log(blockMap)
         }
       }
       if (bd.nonHashData) {
@@ -79,35 +87,45 @@ class Block extends React.Component{
             // INCREDIBLY: v0.6 Hyperledger will include one empty opject when the array should be empty
             let e = bd.nonHashData.chaincodeEvents[i]
             if (!this.isEmpty(e)) {
-              if (blockMap[e.txID]) {
-                blockMap[e.txID].eventName = e.eventName
-                blockMap[e.txID].event = window.atob(e.payload)
-                blockMap[e.txID].chaincodeID = e.chaincodeID
+              if (blockMap[e.tx_id]) {
+                blockMap[e.tx_id].eventName = e.eventName
+                blockMap[e.tx_id].event = window.atob(e.payload)
+                blockMap[e.tx_id].chaincodeID = e.chaincodeID
               } else {
-                blockMap[e.txID] = {
+                blockMap[e.tx_id] = {
                   eventName: e.eventName,
                   event: window.atob(e.payload),
                   chaincodeID: e.chaincodeID
                 }
               }
-            } 
+            }
           }
         }
       }
     }
     let blockArr = []
-    for (var p in blockMap) {
-      if (blockMap.hasOwnProperty(p)) {
-          let a = blockMap[p]
-          a.txid = p
-          blockArr.push(a)
+
+
+    console.log("printing blockArr")
+    console.log(blockArr)
+
+    var populateArr = function() {
+      for (var p in blockMap) {
+        if (blockMap.hasOwnProperty(p)) {
+            let a = blockMap[p]
+            a.txid = p
+            blockArr.push(a)
+        }
       }
+      return blockArr
     }
+
+    var populatedBlockArr = populateArr()
+
     return(
-      <BlockView isExpanded={this.props.isExpanded} blockNumber={this.props.blockNumber} blockData={this.props.blockData} blockArr={blockArr} />
+      <BlockView isExpanded={this.props.isExpanded} blockNumber={this.props.blockNumber} blockData={this.props.blockData} blockArr={populatedBlockArr} />
     )
   }
-
 }
 
 const mapStateToProps = (state, ownProps) =>{

@@ -108,10 +108,14 @@ class ResponsePayloadContainer extends React.Component{
 }
 
 const mapStateToProps = (state) =>{
+  console.log("printing state.chaincode")
+  console.log(state.chaincode)
+
   return {
     responsePayloads: state.chaincode.ui.responsePayloads
   }
 }
+
 
 const mapDispatchToProps = (dispatch) =>{
   return{

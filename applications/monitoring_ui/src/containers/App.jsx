@@ -38,6 +38,7 @@ import "../styles/main.css";
 import * as Colors from 'material-ui/lib/styles/colors';
 
 import {fetchCcSchema} from '../actions/ChaincodeActions'
+import {fetchChainCodeData} from '../actions/ChaincodeActions'
 import ChaincodeOps from './ChaincodeOps'
 
 import ConfigurationDialog from './ConfigurationDialog'
@@ -64,6 +65,7 @@ class App extends React.Component{
   componentDidMount(){
     //this.props.fetchAssetObjectModel()
     this.props.fetchCcSchema();
+    //this.props.fetchChainCodeData();
   }
 
   render(){
@@ -117,6 +119,9 @@ const mapDispatchToProps = (dispatch) => {
     fetchCcSchema: () => {
       dispatch(fetchCcSchema())
     },
+    //fetchChainCodeData: () => {
+    //  dispatch(fetchChainCodeData())
+    //},
     hideSnackbar: () => {
       dispatch(hideSnackbar())
     }

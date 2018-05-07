@@ -50,14 +50,12 @@ class Blockchain extends React.Component{
           title={"Blockchain"}
           showMenuIconButton={false}
         />
-
         {this.props.blockchain.map( (block, index) => {
           return <Block key={block.blockNumber} {...block} />
         })}
       </Paper>
     )
   }
-
 }
 
 Blockchain.propTypes = {

@@ -34,7 +34,7 @@ const BlockView = ({isExpanded, blockNumber, blockData, blockArr}) => (
       title={strings.BLOCK_CARD_HEADER_TEXT + " #"+blockNumber}
       actAsExpander={true}
       showExpandableButton={true}
-      subtitle={(blockData ? moment.unix(blockData.nonHashData.localLedgerCommitTimestamp.seconds).format("M/D/YY LT") : "") +  "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0" + blockArr.length + " transactions"}/>
+      subtitle={blockArr.length + " transactions"}/>
     <CardText expandable={true}>
       <ol>
       {blockArr ? blockArr.map(function(transaction, index){
@@ -45,7 +45,7 @@ const BlockView = ({isExpanded, blockNumber, blockData, blockArr}) => (
                    Chaincode ID: {transaction.chaincodeID}
                  </li>
                  <li>
-                   Timestamp: {transaction.timestamp ? moment.unix(transaction.timestamp.seconds).format("M/D/YY HH:mm:ss.") + Math.floor(transaction.timestamp.nanos/1000000) : "n/a"}
+                   Timestamp: {transaction.timestamp ? moment.unix(transaction.timestamp / 1000).format("M/D/YY HH:mm:ss")  : "n/a"}
                  </li>
                  <li>
                    Function: {transaction.function ? transaction.function : "n/a"}

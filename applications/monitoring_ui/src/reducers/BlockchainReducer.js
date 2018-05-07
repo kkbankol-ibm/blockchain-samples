@@ -63,7 +63,7 @@ export const blockchain = (state=[], action) =>{
           })),
         ...state.slice(0, state.length - diff)
         ]
-      }else{
+      } else{
         //return an array that prepends the new block range to the existing blocks and slices off the new blocks.
         return[        //append appropriate titles to each block in state
           ...(_.range(diff).map(function(item,index){

@@ -123,6 +123,8 @@ function mapStateToProps(state) {
   if(state.chaincodeOpsForm[currentTab]){
     fnIndex = state.chaincodeOpsForm[currentTab].selectedFn;
     fnName = state.chaincodeOpsForm[currentTab].fns[fnIndex].name;
+    console.log("printing currenttab schema")
+    console.log(state.chaincode.schema)
     selectedJsonSchema = state.chaincode.schema ? state.chaincode.schema.API[fnName].properties.args.items : null;
     console.log("***** Selected Schema, funcIdx, funcName, currTab: ", selectedJsonSchema, fnIndex, fnName, currentTab);
   }

@@ -24,10 +24,10 @@ import {
 //set default configuration. To keep things simple, we don't have any UI elements
 //to configure these properties, so they must be populated ahead of time.
 export const configuration = (state={
-  urlRestRoot: "http://localhost:3000",
+  urlRestRoot: "https://ibmblockchain-starter.ng.bluemix.net/api/v1",
    //urlRestRoot: "http://169.44.63.199:37687",
   //chaincodeId: "abf072028033b86aa9d61127c9ac9f0f407a24ce5b464f3afb6e8474169df95e1c1e40d31051553430eca22d10fe8b7083a518c77b80c94d679dba4c6858a90b",
-  chaincodeId: "ff89038cb1db8fcddff9f3c786bba06dc1af9afb2616d8bcb851ac50db383be02e25391d979c5eaa499abf2845df270089eb9ac982cf3dec880d24ff70cf95d9",
+  chaincodeId: "simple_contract",
   //the ID of the chain height polling. This will be populated at runtime.
   chainHeightPollingIntervalId: -1,
   //the chain height polling interval, in milliseconds
@@ -36,7 +36,11 @@ export const configuration = (state={
   //this is a UI specific toggle. This governs whether or not the configuration modal is showing or not.
   showDialog: false,
   //this is the number of blocks to show on the page at a time.
-  blocksPerPage: 10
+  blocksPerPage: 10,
+  key: "org1",
+  secret: "secret",
+  networkId: "networkId",
+  channel: "defaultchannel"
 }, action) => {
   /**
     These state configuration actions are implemented, but we don't use them in the UI. Feel free to wire them to a UI element if needed.
@@ -56,13 +60,28 @@ export const configuration = (state={
       This allows us to make changes to the form without affecting the queries going on in the background.
     **/
     case SET_OBC_CONFIGURATION:
-      return Object.assign({}, state, {
+      var params = {
         //set the appropriate properties
         urlRestRoot: action.obcConfigObj.urlRestRoot,
         chaincodeId: action.obcConfigObj.chaincodeId,
         secureContext: action.obcConfigObj.secureContext,
-        blocksPerPage: action.obcConfigObj.blocksPerPage
-      })
+        blocksPerPage: action.obcConfigObj.blocksPerPage,
+        key: action.obcConfigObj.key,
+        secret: action.obcConfigObj.secret,
+        networkId: action.obcConfigObj.networkId,
+        channel: action.obcConfigObj.channel
+      }
+      let config = {
+          method: 'POST',
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(params)
+      }
+      console.log("updating client")
+      fetch('http://localhost:3001/init_client', config)
+      return Object.assign({}, state, params)
 
     /**
       Strictly a UI control. This determines whether or not the configuration ui dialog should display or not.

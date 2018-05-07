@@ -18,6 +18,7 @@ Alex Nguyen - Initial Contribution
 *****************************************************************************/
 import equal from 'deep-equal';
 import { openSnackbar, hideSnackbar, setSnackbarMsg } from '../actions/AppActions';
+
 import * as strings from '../resources/strings'
 
 export const SET_CC_SCHEMA = "SET_CC_SCHEMA"
@@ -125,6 +126,21 @@ export const updateResponsePayload = (index, payload) => {
     }
 }
 
+export const REQUEST_CHAINCODE_INFO = 'REQUEST_CHAINCODE_INFO'
+function requestChainCodeInfo(){
+  return{
+    type: REQUEST_CHAINCODE_INFO
+  }
+}
+
+export const RECEIVE_CHAINCODE_INFO = "RECEIVE_CHAINCODE_INFO"
+function receiveChaincodeInfo(data){
+  return{
+    type: RECEIVE_CHAINCODE_INFO,
+    data: data
+  }
+}
+
 export const TAB_CREATE = "CREATE";
 export const TAB_REPLACE = "REPLACE";
 export const TAB_READ = "READ";
@@ -154,7 +170,6 @@ export const getFuncName = (f) => {
 //create an object that stores all functions. The possibleTabs is the UI representation
 //of all the tabs that are possible. This model is specifically for the form.
 const createChaincodeOpsModel = (schema, possibleTabs) => {
-
     let obj = {}
 
     possibleTabs.forEach(function(tab) {
@@ -255,7 +270,6 @@ export function sendObcRequest(args, fn, requestType) {
         //iterate through the args and delete any empty strings
 
         args = removeEmptyProps(args, requestType);
-
         let requestPayload = {
             "jsonrpc": "2.0",
             "method": requestType.toLowerCase(),
@@ -274,19 +288,23 @@ export function sendObcRequest(args, fn, requestType) {
             "id": 5
         }
 
+        var key = state.configuration.key
+        var secret = state.configuration.secret
+
         let config = {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                "Authorization": "Basic " + new Buffer(key + ":" + secret, "utf8").toString("base64")
             },
             body: JSON.stringify(requestPayload)
         }
 
-        return fetch(state.configuration.urlRestRoot + '/chaincode/', config)
+        // pass creds, endpoint, etc as json object
+        return fetch('http://localhost:3001/chaincode', config )
             .then(response => response.json())
             .then(json => {
-
                 if (json.error) {
                     dispatch(setSnackbarMsg(json.error.data));
                     dispatch(openSnackbar());
@@ -310,9 +328,9 @@ export function sendObcRequest(args, fn, requestType) {
 
                         //we found a match, which means we should be updating, not appending.
                         if (alreadyRequested) {
-                            dispatch(updateResponsePayload(indexOfMatch, JSON.parse(json.result.message)))
+                            dispatch(updateResponsePayload(indexOfMatch, JSON.stringify(json)))
                         } else {
-                            dispatch(addResponsePayload(args, fn, QUERY, JSON.parse(json.result.message), false, false))
+                            dispatch(addResponsePayload(args, fn, QUERY, JSON.stringify(json), false, false))
                         }
                     }
                 }
@@ -346,21 +364,23 @@ export function fetchCcSchema() {
             "id": 5
         }
 
+        var key = state.configuration.key
+        var secret = state.configuration.secret
+
         let config = {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
+                // "Authorization": "Basic " + new Buffer(key + ":" + secret, "utf8").toString("base64")
             },
             body: JSON.stringify(queryRequestPayload)
         }
 
-        return fetch(state.configuration.urlRestRoot + '/chaincode/', config)
-            .then(response => response.json())
+        // example schemas
+        // https://github.com/ibm-watson-iot/blockchain-samples/blob/master/contracts/basic/simple_contract/schemas.go
+        return fetch('http://localhost:3001' + '/chaincode', config)
             .then(json => {
-
-                console.log(json);
-
                 //if there is an error, display it
                 if (json.error) {
                     dispatch(setSnackbarMsg(json.error.data));
@@ -370,11 +390,397 @@ export function fetchCcSchema() {
                     dispatch(setCcSchema({}))
 
                 } else {
+                    // TODO, adjust this to pull from chaincode instead of hardcoding schema
+                    // json.json().then( (response) => {
+                    //   console.log("json stream received") ; console.log(response)
+                    // } )
                     //update state to store the object model.
-                    dispatch(setCcSchema(JSON.parse(json.result.message)))
-
                     //then parse through the cc schema and create an object
-                    let chaincodeOpsModel = createChaincodeOpsModel(JSON.parse(json.result.message), state.chaincode.ui.possibleTabs)
+                    var schema = {
+                        "API": {
+                            "createAsset": {
+                                "description": "Create an asset. One argument, a JSON encoded event. AssetID is required with zero or more writable properties. Establishes an initial asset state.",
+                                "properties": {
+                                    "args": {
+                                        "description": "args are JSON encoded strings",
+                                        "items": {
+                                            "description": "A set of fields that constitute the writable fields in an asset's state. AssetID is mandatory along with at least one writable field. In this contract pattern, a partial state is used as an event.",
+                                            "properties": {
+                                                "assetID": {
+                                                    "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                                    "type": "string"
+                                                },
+                                                "carrier": {
+                                                    "description": "transport entity currently in possession of asset",
+                                                    "type": "string"
+                                                },
+                                                "location": {
+                                                    "description": "A geographical coordinate",
+                                                    "properties": {
+                                                        "latitude": {
+                                                            "type": "number"
+                                                        },
+                                                        "longitude": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "temperature": {
+                                                    "description": "Temperature of the asset in CELSIUS.",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "assetID"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "maxItems": 1,
+                                        "minItems": 1,
+                                        "type": "array"
+                                    },
+                                    "function": {
+                                        "description": "createAsset function",
+                                        "enum": [
+                                            "createAsset"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "method": "invoke"
+                                },
+                                "type": "object"
+                            },
+                            "deleteAsset": {
+                                "description": "Delete an asset. Argument is a JSON encoded string containing only an assetID.",
+                                "properties": {
+                                    "args": {
+                                        "description": "args are JSON encoded strings",
+                                        "items": {
+                                            "description": "An object containing only an assetID for use as an argument to read or delete.",
+                                            "properties": {
+                                                "assetID": {
+                                                    "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "maxItems": 1,
+                                        "minItems": 1,
+                                        "type": "array"
+                                    },
+                                    "function": {
+                                        "description": "deleteAsset function",
+                                        "enum": [
+                                            "deleteAsset"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "method": "invoke"
+                                },
+                                "type": "object"
+                            },
+                            "init": {
+                                "description": "Initializes the contract when started, either by deployment or by peer restart.",
+                                "properties": {
+                                    "args": {
+                                        "description": "args are JSON encoded strings",
+                                        "items": {
+                                            "description": "event sent to init on deployment",
+                                            "properties": {
+                                                "nickname": {
+                                                    "default": "SIMPLE",
+                                                    "description": "The nickname of the current contract",
+                                                    "type": "string"
+                                                },
+                                                "version": {
+                                                    "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "version"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "maxItems": 1,
+                                        "minItems": 1,
+                                        "type": "array"
+                                    },
+                                    "function": {
+                                        "description": "init function",
+                                        "enum": [
+                                            "init"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "method": "deploy"
+                                },
+                                "type": "object"
+                            },
+                            "readAsset": {
+                                "description": "Returns the state an asset. Argument is a JSON encoded string. AssetID is the only accepted property.",
+                                "properties": {
+                                    "args": {
+                                        "description": "args are JSON encoded strings",
+                                        "items": {
+                                            "description": "An object containing only an assetID for use as an argument to read or delete.",
+                                            "properties": {
+                                                "assetID": {
+                                                    "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "maxItems": 1,
+                                        "minItems": 1,
+                                        "type": "array"
+                                    },
+                                    "function": {
+                                        "description": "readAsset function",
+                                        "enum": [
+                                            "readAsset"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "method": "query",
+                                    "result": {
+                                        "description": "A set of fields that constitute the complete asset state.",
+                                        "properties": {
+                                            "assetID": {
+                                                "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                                "type": "string"
+                                            },
+                                            "carrier": {
+                                                "description": "transport entity currently in possession of asset",
+                                                "type": "string"
+                                            },
+                                            "location": {
+                                                "description": "A geographical coordinate",
+                                                "properties": {
+                                                    "latitude": {
+                                                        "type": "number"
+                                                    },
+                                                    "longitude": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "temperature": {
+                                                "description": "Temperature of the asset in CELSIUS.",
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "readAssetSamples": {
+                                "description": "Returns a string generated from the schema containing sample Objects as specified in generate.json in the scripts folder.",
+                                "properties": {
+                                    "args": {
+                                        "description": "accepts no arguments",
+                                        "items": {},
+                                        "maxItems": 0,
+                                        "minItems": 0,
+                                        "type": "array"
+                                    },
+                                    "function": {
+                                        "description": "readAssetSamples function",
+                                        "enum": [
+                                            "readAssetSamples"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "method": "query",
+                                    "result": {
+                                        "description": "JSON encoded object containing selected sample data",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "readAssetSchemas": {
+                                "description": "Returns a string generated from the schema containing APIs and Objects as specified in generate.json in the scripts folder.",
+                                "properties": {
+                                    "args": {
+                                        "description": "accepts no arguments",
+                                        "items": {},
+                                        "maxItems": 0,
+                                        "minItems": 0,
+                                        "type": "array"
+                                    },
+                                    "function": {
+                                        "description": "readAssetSchemas function",
+                                        "enum": [
+                                            "readAssetSchemas"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "method": "query",
+                                    "result": {
+                                        "description": "JSON encoded object containing selected schemas",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "updateAsset": {
+                                "description": "Update the state of an asset. The one argument is a JSON encoded event. AssetID is required along with one or more writable properties. Establishes the next asset state. ",
+                                "properties": {
+                                    "args": {
+                                        "description": "args are JSON encoded strings",
+                                        "items": {
+                                            "description": "A set of fields that constitute the writable fields in an asset's state. AssetID is mandatory along with at least one writable field. In this contract pattern, a partial state is used as an event.",
+                                            "properties": {
+                                                "assetID": {
+                                                    "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                                    "type": "string"
+                                                },
+                                                "carrier": {
+                                                    "description": "transport entity currently in possession of asset",
+                                                    "type": "string"
+                                                },
+                                                "location": {
+                                                    "description": "A geographical coordinate",
+                                                    "properties": {
+                                                        "latitude": {
+                                                            "type": "number"
+                                                        },
+                                                        "longitude": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "temperature": {
+                                                    "description": "Temperature of the asset in CELSIUS.",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "assetID"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "maxItems": 1,
+                                        "minItems": 1,
+                                        "type": "array"
+                                    },
+                                    "function": {
+                                        "description": "updateAsset function",
+                                        "enum": [
+                                            "updateAsset"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "method": "invoke"
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "objectModelSchemas": {
+                            "assetIDKey": {
+                                "description": "An object containing only an assetID for use as an argument to read or delete.",
+                                "properties": {
+                                    "assetID": {
+                                        "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "event": {
+                                "description": "A set of fields that constitute the writable fields in an asset's state. AssetID is mandatory along with at least one writable field. In this contract pattern, a partial state is used as an event.",
+                                "properties": {
+                                    "assetID": {
+                                        "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                        "type": "string"
+                                    },
+                                    "carrier": {
+                                        "description": "transport entity currently in possession of asset",
+                                        "type": "string"
+                                    },
+                                    "location": {
+                                        "description": "A geographical coordinate",
+                                        "properties": {
+                                            "latitude": {
+                                                "type": "number"
+                                            },
+                                            "longitude": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "temperature": {
+                                        "description": "Temperature of the asset in CELSIUS.",
+                                        "type": "number"
+                                    }
+                                },
+                                "required": [
+                                    "assetID"
+                                ],
+                                "type": "object"
+                            },
+                            "initEvent": {
+                                "description": "event sent to init on deployment",
+                                "properties": {
+                                    "nickname": {
+                                        "default": "SIMPLE",
+                                        "description": "The nickname of the current contract",
+                                        "type": "string"
+                                    },
+                                    "version": {
+                                        "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "version"
+                                ],
+                                "type": "object"
+                            },
+                            "state": {
+                                "description": "A set of fields that constitute the complete asset state.",
+                                "properties": {
+                                    "assetID": {
+                                        "description": "The ID of a managed asset. The resource focal point for a smart contract.",
+                                        "type": "string"
+                                    },
+                                    "carrier": {
+                                        "description": "transport entity currently in possession of asset",
+                                        "type": "string"
+                                    },
+                                    "location": {
+                                        "description": "A geographical coordinate",
+                                        "properties": {
+                                            "latitude": {
+                                                "type": "number"
+                                            },
+                                            "longitude": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "temperature": {
+                                        "description": "Temperature of the asset in CELSIUS.",
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                    // dispatch(e(JSON.parse(json.result.message)))
+                    dispatch(setCcSchema(schema))
+
+                    let chaincodeOpsModel = createChaincodeOpsModel(schema, state.chaincode.ui.possibleTabs)
 
                     //set the chaincode ops
                     //this is tied directly to the form model, so we use the react-redux-form actions.change function
@@ -386,7 +792,6 @@ export function fetchCcSchema() {
 }
 
 export function togglePayloadPolling(index) {
-
     //we do the necessary operations to enable or disable polling
     return function(dispatch, getState) {
         let state = getState();
@@ -407,5 +812,18 @@ export function togglePayloadPolling(index) {
             dispatch(sendObcRequest(payloadUi.args, payloadUi.fn, payloadUi.opType))
 
         }
+    }
+}
+
+export function fetchChainCodeData(){
+    return function(dispatch, getState) {
+      let state = getState();
+        var data = [ { name: 'fabcar',
+          version: 'v1',
+          path: '/Users/kalonji/projects/fabric-samples/chaincode/fabcar/node/',
+          input: '',
+          escc: '',
+          vscc: '' }]
+        dispatch(receiveChaincodeInfo(data))
     }
 }
