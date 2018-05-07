@@ -6,7 +6,7 @@ The Blockchain Monitoring UI is a dynamically generated user interface for IBM W
 * Node installed locally on your machine.  
 You can install it from https://nodejs.org/.  
 * An IBM Blockchain or Hyperledger peer with an accessible REST Endpoint.  
-For more information, see: https://console.ng.bluemix.net/docs/services/IoT/blockchain/dev_blockchain.html.
+For more information, see: https://ibmblockchain-starter.ng.bluemix.net/api-docs.
 * A deployed contract on the blockchain peer network.
 
 ## Downloading
@@ -17,7 +17,7 @@ https://github.com/ibm-watson-iot/blockchain-samples
 The monitoring UI component is in the monitoring_ui folder. You can also download a compressed file of the project by clicking **Download ZIP** from the project page.  
 
 ## Installing
-To install the Monitoring UI on your local workstation, in the root directory of the project, run the following command:
+To install the Monitoring UI on your local workstation, run the following command in the root directory of this project and in the `react-backend` directory:
 ```
 npm install
 ```
@@ -40,7 +40,11 @@ API Host and Port	| http://peer_URL:port	| The host and port for the IBM Blockch
 Chaincode ID	| The contract ID that was returned when you registered the contract.	| The contract ID is a 128-character alphanumeric hash that corresponds to the Contract ID entry. </br> **Important:** As you cut-and-paste the contract ID, make sure that no spaces are included in the ID. If the ID is incorrectly entered, the UI will display the blockchain ledger entries, but the asset search function will not work.
 Secure Context|Your fabric user	| This is required for connecting to IBM Blockchain instances on Bluemix. </br>**Important:** For secureContext use the user name that was used to configure the fabric.
 Number of blocks to display	| A positive integer. Default: 10	| The number of blockchain blocks to display.
+Key | API Key |
+Secret | API Secret |
+Network Id | |
 
+**Important** After submitting the form, a request will be sent to the `/init_client` endpoint with the provided parameters. This will fetch the network configuration file and create/enroll a user named "monitoring_user". Once this is complete, a PEM encoded Certificate will be output to the server logs. This certificate will need to be manually uploaded via the blockchain service UI, which can be found at the following url https://ibmblockchain-starter.ng.bluemix.net/network/<network_id>/members/certificates. The chaincode operations will not work until this step has been completed
 
 ## Exploring the Monitoring UI Features
 Use the Monitoring UI single page application to perform actions on the blockchain, see the results of those actions, and monitor the state of the blockchain ledger.   
