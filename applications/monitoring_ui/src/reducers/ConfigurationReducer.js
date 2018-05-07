@@ -81,6 +81,7 @@ export const configuration = (state={
       }
       console.log("updating client")
       fetch('http://localhost:3001/init_client', config)
+      fetch('http://localhost:3001/getchaincodes', config)
       return Object.assign({}, state, params)
 
     /**
